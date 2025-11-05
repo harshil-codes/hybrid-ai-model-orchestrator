@@ -1,0 +1,95 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    openshift.io/display-name: interest-rate
+    security.opendatahub.io/enable-auth: "true"
+    serving.knative.openshift.io/enablePassthrough: "true"
+    serving.kserve.io/deploymentMode: Serverless
+    serving.kserve.io/stop: "false"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  finalizers:
+  - odh.inferenceservice.finalizers
+  - inferenceservice.finalizers
+  labels:
+    opendatahub.io/dashboard: "true"
+  name: interest-rate
+  namespace: loan-rate-model
+spec:
+  predictor:
+    automountServiceAccountToken: false
+    maxReplicas: 1
+    minReplicas: 1
+    model:
+      modelFormat:
+        name: onnx
+        version: "1"
+      name: ""
+      resources:
+        limits:
+          cpu: "2"
+          memory: 8Gi
+        requests:
+          cpu: "1"
+          memory: 4Gi
+      runtime: interest-rate
+      storage:
+        key: gcs-connection1
+        path: models/onnx/interest-rate
+status:
+  address:
+    url: https://interest-rate.loan-rate-model.svc.cluster.local
+  components:
+    predictor:
+      address:
+        url: http://interest-rate-predictor.loan-rate-model.svc.cluster.local
+      latestCreatedRevision: interest-rate-predictor-00001
+      latestReadyRevision: interest-rate-predictor-00001
+      latestRolledoutRevision: interest-rate-predictor-00001
+      traffic:
+      - latestRevision: true
+        percent: 100
+        revisionName: interest-rate-predictor-00001
+      url: https://interest-rate-predictor-loan-rate-model.apps.asa-demo.7mhsq.gcp.redhatworkshops.io
+  conditions:
+  - lastTransitionTime: "2025-10-25T15:07:06Z"
+    status: "True"
+    type: IngressReady
+  - lastTransitionTime: "2025-10-25T15:07:05Z"
+    severity: Info
+    status: "True"
+    type: LatestDeploymentReady
+  - lastTransitionTime: "2025-10-25T15:07:05Z"
+    severity: Info
+    status: "True"
+    type: PredictorConfigurationReady
+  - lastTransitionTime: "2025-10-25T15:07:06Z"
+    status: "True"
+    type: PredictorReady
+  - lastTransitionTime: "2025-10-25T15:07:06Z"
+    severity: Info
+    status: "True"
+    type: PredictorRouteReady
+  - lastTransitionTime: "2025-10-25T15:07:06Z"
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-10-25T15:07:06Z"
+    severity: Info
+    status: "True"
+    type: RoutesReady
+  - lastTransitionTime: "2025-10-25T15:06:57Z"
+    severity: Info
+    status: "False"
+    type: Stopped
+  deploymentMode: Serverless
+  modelStatus:
+    copies:
+      failedCopies: 0
+      totalCopies: 1
+    states:
+      activeModelState: Loaded
+      targetModelState: Loaded
+    transitionStatus: UpToDate
+  observedGeneration: 1
+  url: https://interest-rate-loan-rate-model.apps.asa-demo.7mhsq.gcp.redhatworkshops.io
