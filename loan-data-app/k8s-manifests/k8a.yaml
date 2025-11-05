@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-publisher
+  namespace: loan-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loan-publisher
+  template:
+    metadata:
+      labels:
+        app: loan-publisher
+    spec:
+      containers:
+        - name: loan-publisher
+          image: us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GCP_PROJECT_ID
+              value: "openenv-7mhsq"
+            - name: PUBSUB_TOPIC
+              value: "loan-events"
+            - name: PUBLISH_INTERVAL_SECONDS
+              value: "3"
+            - name: HISTORICAL_BURST
+              value: "50"
+            # GOOGLE_APPLICATION_CREDENTIALS will point to mounted key file
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/var/secrets/google/key.json"
+          volumeMounts:
+            - name: gcp-sa
+              mountPath: /var/secrets/google
+              readOnly: true
+      volumes:
+        - name: gcp-sa
+          secret:
+            secretName: gcp-sa-key
+            items:
+              - key: key.json
+                path: key.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loan-publisher
+  namespace: loan-app
+spec:
+  selector:
+    app: loan-publisher
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+

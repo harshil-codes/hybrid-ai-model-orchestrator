@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-frontend
+  namespace: loan-app
+  labels:
+    app: loan-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loan-frontend
+  template:
+    metadata:
+      labels:
+        app: loan-frontend
+    spec:
+      containers:
+        - name: loan-frontend
+          #image: us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-frontend:v5
+          image: image-registry.openshift-image-registry.svc:5000/loan-app/loan-frontend@sha256:93f6659bb31b91e6dfda4b41de4e7e7b678d83593bb5c133c03ca3550f3bb53b
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 80
+              protocol: TCP
+          env:
+            - name: VITE_BACKEND_URL
+              value: "https://loan-backend-route-loan-app.apps.asa-demo.7mhsq.gcp.redhatworkshops.io/predict"
+

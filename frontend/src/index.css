@@ -1,0 +1,27 @@
+body {
+  background: #f8fafc;
+  margin: 0;
+  font-family: Inter, sans-serif;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #94a3b8;
+}
+
