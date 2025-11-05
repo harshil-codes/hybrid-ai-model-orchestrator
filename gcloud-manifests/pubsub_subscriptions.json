@@ -1,0 +1,29 @@
+[
+  {
+    "ackDeadlineSeconds": 10,
+    "bigqueryConfig": {
+      "state": "ACTIVE",
+      "table": "openenv-7mhsq.loan_data.loan_data_table",
+      "useTableSchema": true
+    },
+    "expirationPolicy": {
+      "ttl": "2678400s"
+    },
+    "messageRetentionDuration": "604800s",
+    "name": "projects/openenv-7mhsq/subscriptions/loan-sub-bq",
+    "pushConfig": {},
+    "state": "ACTIVE",
+    "topic": "projects/openenv-7mhsq/topics/loan-events"
+  },
+  {
+    "ackDeadlineSeconds": 10,
+    "expirationPolicy": {
+      "ttl": "2678400s"
+    },
+    "messageRetentionDuration": "604800s",
+    "name": "projects/openenv-7mhsq/subscriptions/loan-sub",
+    "pushConfig": {},
+    "state": "ACTIVE",
+    "topic": "projects/openenv-7mhsq/topics/loan-events"
+  }
+]

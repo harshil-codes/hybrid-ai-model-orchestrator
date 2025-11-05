@@ -1,0 +1,99 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "event_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "event_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "entity_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "entity_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "loan_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "requested_amount",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "requested_tenor_months",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "payment_due",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "payment_amount",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "payment_method",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "outstanding_balance",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "num_past_due",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "credit_score",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "annual_income",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "employment_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "region",
+    "type": "STRING"
+  },
+  {
+    "fields": [
+      {
+        "mode": "NULLABLE",
+        "name": "note",
+        "type": "STRING"
+      }
+    ],
+    "mode": "NULLABLE",
+    "name": "metadata",
+    "type": "RECORD"
+  }
+]
