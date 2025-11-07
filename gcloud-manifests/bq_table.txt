@@ -1,0 +1,36 @@
+## bq show  openenv-7mhsq:loan_data.loan_data_table
+
+Table openenv-7mhsq:loan_data.loan_data_table
+
+   Last modified                  Schema                 Total Rows   Total Bytes   Expiration   Time Partitioning   Clustered Fields   Total Logical Bytes   Total Physical Bytes   Labels  
+ ----------------- ------------------------------------ ------------ ------------- ------------ ------------------- ------------------ --------------------- ---------------------- -------- 
+  07 Nov 15:51:24   |- event_id: string (required)       26723349     5391064400                                                        5391064400            902446921                      
+                    |- event_type: string (required)                                                                                                                                         
+                    |- timestamp: timestamp (required)                                                                                                                                       
+                    |- entity_type: string                                                                                                                                                   
+                    |- entity_id: string                                                                                                                                                     
+                    |- loan_id: string                                                                                                                                                       
+                    |- requested_amount: float                                                                                                                                               
+                    |- requested_tenor_months: integer                                                                                                                                       
+                    |- payment_due: float                                                                                                                                                    
+                    |- payment_amount: float                                                                                                                                                 
+                    |- payment_method: string                                                                                                                                                
+                    |- outstanding_balance: float                                                                                                                                            
+                    |- num_past_due: integer                                                                                                                                                 
+                    |- credit_score: integer                                                                                                                                                 
+                    |- annual_income: float                                                                                                                                                  
+                    |- employment_status: string                                                                                                                                             
+                    |- region: string                                                                                                                                                        
+                    +- metadata: record                                                                                                                                                      
+                    |  |- note: string                                                                                                                                                       
+
+## bq head --max_rows=5 openenv-7mhsq:loan_data.loan_data_table
++--------------------------------------+-------------+---------------------+-------------+-----------+--------------+------------------+------------------------+-------------+----------------+----------------+---------------------+--------------+--------------+---------------+-------------------+----------+---------------------------------+
+|               event_id               | event_type  |      timestamp      | entity_type | entity_id |   loan_id    | requested_amount | requested_tenor_months | payment_due | payment_amount | payment_method | outstanding_balance | num_past_due | credit_score | annual_income | employment_status |  region  |            metadata             |
++--------------------------------------+-------------+---------------------+-------------+-----------+--------------+------------------+------------------------+-------------+----------------+----------------+---------------------+--------------+--------------+---------------+-------------------+----------+---------------------------------+
+| 3e09eccf-3ef6-4c2d-8263-d1482b1d214e | application | 2025-10-20 09:43:14 | business    | STRM-3002 | LN-STRM-3002 |         282819.0 |                     60 |        NULL |           NULL | NULL           |                NULL |            0 |          682 |      528537.0 | owner             | us-west1 | {"note":"new loan application"} |
+| bb3388ec-448c-495d-b471-917c407f7ef7 | application | 2025-10-20 09:43:50 | individual  | STRM-3001 | LN-STRM-3001 |          44645.0 |                     36 |        NULL |           NULL | NULL           |                NULL |            0 |          760 |       50840.0 | contractor        | us-west1 | {"note":"new loan application"} |
+| e7a50e7a-8e3c-4068-896d-9e063a885c92 | application | 2025-10-20 09:44:27 | individual  | STRM-3001 | LN-STRM-3001 |          44645.0 |                     36 |        NULL |           NULL | NULL           |                NULL |            0 |          760 |       50840.0 | contractor        | us-west1 | {"note":"new loan application"} |
+| dc33414a-3e85-4930-89b6-12fc42d84061 | application | 2025-10-20 09:45:03 | individual  | STRM-3001 | LN-STRM-3001 |          44645.0 |                     36 |        NULL |           NULL | NULL           |                NULL |            0 |          760 |       50840.0 | contractor        | us-west1 | {"note":"new loan application"} |
+| 0af20e15-e61c-41ce-9c9b-e2bf9f9717de | application | 2025-10-20 09:45:40 | individual  | STRM-3001 | LN-STRM-3001 |          44645.0 |                     36 |        NULL |           NULL | NULL           |                NULL |            0 |          760 |       50840.0 | contractor        | us-west1 | {"note":"new loan application"} |
++--------------------------------------+-------------+---------------------+-------------+-----------+--------------+------------------+------------------------+-------------+----------------+----------------+---------------------+--------------+--------------+---------------+-------------------+----------+---------------------------------+

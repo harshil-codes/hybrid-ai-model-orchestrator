@@ -1,0 +1,20 @@
+## bq show  openenv-7mhsq:loan_data.loan_training_data_raw_v3
+Table openenv-7mhsq:loan_data.loan_training_data_raw_v3
+
+   Last modified                 Schema                Total Rows   Total Bytes   Expiration   Time Partitioning   Clustered Fields   Total Logical Bytes   Total Physical Bytes   Labels  
+ ----------------- ---------------------------------- ------------ ------------- ------------ ------------------- ------------------ --------------------- ---------------------- -------- 
+  05 Nov 13:43:32   |- avg_credit_score: float         1452         46464                                                             46464                 34663                          
+                    |- avg_annual_income: float                                                                                                                                            
+                    |- avg_requested_amount: float                                                                                                                                         
+                    |- loan_approval_status: integer                                                                                                                                       
+
+##  bq show  openenv-7mhsq:loan_data.loan_training_data_raw_v3
++--------------------+--------------------+----------------------+----------------------+
+|  avg_credit_score  | avg_annual_income  | avg_requested_amount | loan_approval_status |
++--------------------+--------------------+----------------------+----------------------+
+| 639.09130122214265 | 69265.249395464329 |   15611.562512254104 |                    0 |
+| 758.49122922278445 | 253859.42027462041 |   872514.72564220463 |                    0 |
+|  702.0576460648598 | 75482.031325144577 |   69445.348086046637 |                    0 |
+|  636.3445554971064 |   42189.2442135718 |   30606.107311941076 |                    0 |
+|   686.494020298662 |  512850.3775292522 |   839671.13316956488 |                    0 |
++--------------------+--------------------+----------------------+----------------------+
