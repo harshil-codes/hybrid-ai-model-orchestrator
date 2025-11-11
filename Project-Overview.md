@@ -1,6 +1,12 @@
 # **Hybrid AI Model Orchestration — Financial Services (Loan Approval) — Demo Plan**
 
-## **1\) High-level summary**
+## **Summary**
+
+### This project demonstrates an end-to-end hybrid AI architecture combining Google Vertex AI and OpenShift AI to automate loan decisioning. The frontend (React) collects applicant data and sends it to a backend (FastAPI on OpenShift), which first queries a Vertex AI model for loan approval prediction and confidence scoring. If approved, it then calls an OpenShift AI ONNX model to determine the personalized interest rate. The system integrates seamlessly with a conversational Llama-based chatbot to provide applicants personalized financial guidance and loan insights. 
+
+![Architecture Diagram](ai-model-orchestration-arch.png.)
+
+### **1\) High-level summary**
 
 * Two model environments:
 
@@ -14,7 +20,7 @@
 
 ---
 
-## **2\) Top-level components**
+### **2\) Top-level components**
 
 1. **Business Application (Producer)**
 
@@ -56,7 +62,7 @@
 
 ---
 
-## **3\) Data model & messages**
+### **3\) Data model & messages**
 
 Use a single canonical JSON schema for all events (application \+ repayment \+ updates) so both clouds can consume the same payload.
 
@@ -82,9 +88,9 @@ Publish same messages to:
 
 ---
 
-## **4\) End-to-end data flows**
+### **4\) End-to-end data flows**
 
-### **A — Ingest (GCP)**
+#### **A — Ingest (GCP)**
 
 1. Business app → Pub/Sub `loan-events`.
 
@@ -92,7 +98,7 @@ Publish same messages to:
 
 3. Scheduled Vertex training pipeline reads BigQuery feature tables → trains classifier → registers model → deploys to Vertex endpoint.
 
-### **B — Ingest (OpenShift)**
+#### **B — Ingest (OpenShift)**
 
 1. Business app → Kafka `loan-events` (Strimzi).
 
@@ -100,7 +106,7 @@ Publish same messages to:
 
 3. On-schedule or triggered training job consumes feature tables → trains regression model → registers in MLflow → deploys to KServe endpoint.
 
-### **C — Inference / Orchestration**
+#### **C — Inference / Orchestration**
 
 1. Business app calls `POST /api/v1/loan-decision` on API Gateway (OpenShift) with application payload.
 
@@ -116,7 +122,7 @@ Publish same messages to:
 
 ---
 
-## **5\) Routing logic (policy examples)**
+### **5\) Routing logic (policy examples)**
 
 Routing decisions should be configurable (feature flags / policy store). Example decision tree:
 
@@ -143,7 +149,7 @@ choose highest score
 
 ---
 
-## **6\) API design (example)**
+### **6\) API design (example)**
 
 `POST /api/v1/loan-decision`  
  Request:
@@ -174,9 +180,9 @@ Response:
 
 ---
 
-## **7\) Model specifics & data needs**
+### **7\) Model specifics & data needs**
 
-### **Vertex AI — Loan Approval (classifier)**
+#### **Vertex AI — Loan Approval (classifier)**
 
 * Input: applicant profile, credit history, repayment history, requested loan details, engineered features (DTI, past delinquency count).
 
@@ -194,155 +200,4 @@ Response:
 
 Both models trained from the same canonical dataset but with different feature selections and preprocessing pipelines.
 
----
-
-## **8\) CI/CD & infra automation**
-
-* **Infra**: Terraform for GCP (Pub/Sub, BigQuery tables, IAM) and GitOps (ArgoCD / Helm) for OpenShift resources (Kafka, Spark, KServe).
-
-* **Model Pipelines**:
-
-  * Vertex: Vertex Pipelines triggered by BigQuery schedule or Git commit.
-
-  * OpenShift: Tekton or Argo Workflows to run Spark training and push artifacts to MLflow.
-
-* **App Pipelines**: Build/push publisher microservice image (GCR/Artifact Registry & OpenShift internal registry), deploy via ArgoCD.
-
-* **Secrets**: Use Workload Identity (GKE) or Workload Identity Federation / Vault for OpenShift to access GCP without embedding keys.
-
----
-
-## **9\) Observability, monitoring, and governance**
-
-* **Metrics**: request rates, p95 latency, model confidence distribution, per-model accuracy (daily), false-positive/negative counts.
-
-* **Traces**: OpenTelemetry end-to-end traces: business app → API gateway → model endpoints.
-
-* **Logging**: Structured logs, audit trail of decisions and model versions.
-
-* **Model Monitoring**: Data drift alerts, concept drift, input distribution checks. Push drift alerts to Grafana and Slack.
-
-* **Governance**: Model registry with lineage, owner, training dataset snapshot, approval status, and deploy timestamp.
-
----
-
-## **10\) Security & compliance**
-
-* **Auth**: OAuth2 / JWT for business app → gateway; gateway uses service accounts to call Vertex.
-
-* **Network**: Private connectivity or secure public endpoints; mTLS within OpenShift.
-
-* **Data residency**: enforce that PII stays on-prem; anonymize/aggregate data sent to GCP if needed.
-
-* **Audit**: Log all decisions and model metadata for regulatory audit.
-
----
-
-## **11\) Demo script — what to show (step-by-step)**
-
-1. **Prep**: Deploy API Gateway on OpenShift with config pointing to Vertex endpoint and OpenShift KServe endpoint.
-
-2. **Seed data**: Run publisher microservice that:
-
-   * publishes historical loan repayments and application events to Pub/Sub and Kafka.
-
-   * continues streaming new events.
-
-3. **Train & Deploy (pre-run)**:
-
-   * Train Vertex approval model on BigQuery (or use pre-trained demo model).
-
-   * Train OpenShift regression model with Spark (or pre-seeded model).
-
-   * Deploy endpoints: Vertex endpoint \+ KServe endpoint.
-
-4. **Run live demo**:
-
-   * Submit a new loan application via the business app (or curl to the gateway).
-
-   * Show logs/traces: API Gateway calls Vertex → receives `approved`.
-
-   * Gateway then calls OpenShift → receives `suggested_amount` & `interest_rate`.
-
-   * Gateway returns combined response to the app; show latency & model metadata.
-
-5. **Scenario variations**:
-
-   * Send an application likely to be `manual_review` → show gateway response `manual_review_required`.
-
-   * Simulate Vertex outage (scale down Vertex endpoint) → show fallback behavior (gateway uses backup or returns different flow).
-
-   * Show model-monitoring dashboard: model confidence trends, drift alert after synthetic data shift.
-
-6. **Wrap-up**:
-
-   * Show model registries and explain lineage and approvals.
-
-   * Explain what parts are cloud vs on-prem and why.
-
----
-
-## **12\) Minimal viable demo (MVP)**
-
-Implement these first to prove the hybrid orchestration story:
-
-1. **Publisher microservice** (publishes to Pub/Sub and Kafka).
-
-2. **Vertex AI** classifier endpoint (simple AutoML or small model) — deployed.
-
-3. **OpenShift AI** regression endpoint (simple scikit-learn model served via KServe) — deployed.
-
-4. **API Gateway** on OpenShift that routes approval → Vertex → if approve → OpenShift.
-
-5. **Simple dashboards**: Grafana for latency; logs showing routing and model versions.
-
-This MVP demonstrates routing, sequential inference, failover, and monitoring without full automation.
-
----
-
-## **13\) Success criteria & demo metrics**
-
-* Correct routing: `loan_application` requests route to Vertex first.
-
-* Sequential orchestration: only when approved does gateway call OpenShift for terms.
-
-* Latency: end-to-end decision latency within acceptable demo threshold (e.g., \<1s for POC).
-
-* Observability: traces show both model calls and model versions.
-
-* Governance: model lineage and deployed versions visible.
-
----
-
-## **14\) Decisions to finalize later**
-
-* Which exact modelling approaches (AutoML vs custom) for each model.
-
-* Data retention and anonymization policy for GCP (PII).
-
-* Whether to allow OpenShift to fallback to Vertex for terms.
-
-* How to sync model metadata between Vertex Registry and MLflow.
-
-* SLA expectations for failover (immediate vs batched).
-
----
-
-## **15\) Next artifacts I can produce immediately**
-
-Pick any and I’ll generate it next (I’ll start building right away — no waiting):
-
-* A detailed architecture diagram (components \+ dataflow \+ networking).
-
-* API Gateway starter code (Node.js or Python) implementing routing and fallback logic.
-
-* Publisher microservice code that publishes to Pub/Sub **and** Kafka (Strimzi).
-
-* Spark Structured Streaming consumer \+ training notebook (PySpark) for OpenShift.
-
-* Terraform / Helm skeleton to deploy core infra (Pub/Sub \+ BigQuery \+ Kafka \+ KServe).
-
-* Step-by-step demo playbook (commands \+ screenshots to run during presentation).
-
-Which of those do you want first?
 
