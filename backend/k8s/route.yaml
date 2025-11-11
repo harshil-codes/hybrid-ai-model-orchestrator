@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: loan-backend-route
+  namespace: loan-app
+spec:
+  to:
+    kind: Service
+    name: loan-backend
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+
