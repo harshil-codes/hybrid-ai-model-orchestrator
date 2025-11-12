@@ -9,23 +9,20 @@
 
 ### System Components
 #### Business Frontend
-```
 React + Vite web UI.
 Accepts loan input fields: credit_score, annual_income, requested_amount, requested_tenor_months.
 Displays model inference results (approval, confidence, interest rate).
 Integrates a chatbot panel (bottom-right) that talks to the backend /chat endpoint.
-```
+
 #### Backend (API Gateway / Inference Router)
-```
 Implemented in FastAPI, deployed on OpenShift.
 Routes requests as follows:
 Calls Vertex AI endpoint (loan approval model).
 If approved → calls OpenShift AI model (interest rate model).
 Stores context for chatbot awareness.
 Also serves /chat, which forwards prompts to the Llama model along with recent decision context.
-```
+
 #### Vertex AI (Google Cloud)
-```
 Dataset: loan_training_data_v5 in BigQuery.
 Features: avg_credit_score, avg_annual_income, avg_requested_amount, avg_requested_tenor_months, loan_to_income_ratio.
 Target: loan_approval_status.
@@ -33,17 +30,16 @@ Target: loan_approval_status.
 Model: AutoML Classification trained on BigQuery data.
 
 Endpoint: Deployed Vertex model serving predict requests via REST API.
-```
+
 #### OpenShift AI (on OpenShift Cluster)
-Predictive Model
-```
+##### Predictive Model
+
 Interest-rate regression model served through KServe (ONNX).
-```
-Large Language Model
-```
+
+##### Large Language Model
+
 OpenShift Cluster has one GPU node running 2xA100 from Google Cloud
 Llama 3.1-8B-Instruct model is running on Red Hat AI Inference Server and leveraging vllm
-```
 
 ### Data & Flow
 
