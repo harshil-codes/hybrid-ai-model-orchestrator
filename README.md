@@ -196,3 +196,5 @@ oc rollout restart deploy/frontend
 ```
 * Make sure backend and frontend pods are healthy
 * Go to the frontend route and use http instead of https. Follow this [link](http://frontend-loan-app.apps.asa-demo.7mhsq.gcp.redhatworkshops.io/)
+
+![UI Should Look like this](images/frontend-ui.png)
