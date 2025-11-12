@@ -80,6 +80,12 @@ bq query --use_legacy_sql=false \
 );"
 ```
 * [Create A Subscription to write from Pub Sub to bigquery](gcloud-manifests/pubsub_subscriptions.json)
+```
+gcloud pubsub subscriptions create $SUBSCRIPTION_ID \
+  --topic=$TOPIC_ID \
+  --bigquery-table=${PROJECT_ID}:${BQ_TABLE} \
+  --use-topic-schema
+```
 * [Verify table in BigQuery](gcloud-manifests/bq_table.txt)
 * Create a table to have a synthetic column for loan\_approval\_status, this is the column where trainig will be done on
 * Query for creating table is [here](gcloud-manifests/bq_training_data_table.sql)
