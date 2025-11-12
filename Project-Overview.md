@@ -2,8 +2,9 @@
 
 ## **Summary**
 
-### This project demonstrates an end-to-end hybrid AI architecture combining Google Vertex AI and OpenShift AI to automate loan decisioning. The frontend (React) collects applicant data and sends it to a backend (FastAPI on OpenShift), which first queries a Vertex AI model for loan approval prediction and confidence scoring. If approved, it then calls an OpenShift AI ONNX model to determine the personalized interest rate. The system integrates seamlessly with a conversational Llama-based chatbot to provide applicants personalized financial guidance and loan insights. 
+#### This project demonstrates an end-to-end hybrid AI architecture combining Google Vertex AI and OpenShift AI to automate loan decisioning. The frontend (React) collects applicant data and sends it to a backend (FastAPI on OpenShift), which first queries a Vertex AI model for loan approval prediction and confidence scoring. If approved, it then calls an OpenShift AI ONNX model to determine the personalized interest rate. The system integrates seamlessly with a conversational Llama-based chatbot to provide applicants personalized financial guidance and loan insights. 
 
+### Arcitecture Diagram
 ![Architecture Diagram](images/ai-model-orchestration-arch.png)
 
 ### **1\) High-level summary**
