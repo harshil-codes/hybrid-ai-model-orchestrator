@@ -136,7 +136,7 @@ oc apply -f openshift-ai-manifests/dsc.yaml
 oc create ns loan-rate-model
 ```
 * Create Workbench in OpenShift AI in loan-rate-model namespace
-* Follow this jupyter [notebook](final-train-infer.ipynb) to train and run model locally
+* Follow this jupyter [notebook](openshift-ai-manifests/final-train-infer.ipynb) to train and run model locally
 * Deploy the model and Serve using OpenShift AI
 ```
 oc apply -f openshift-ai-manifests/InferenceService.yaml
