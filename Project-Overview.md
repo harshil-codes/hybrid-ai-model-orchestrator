@@ -70,7 +70,7 @@ BigQuery-based dataset creation and Vertex AI AutoML training pipeline.
 Llama LLM Running on vllm for optimized inferencing.
 
 ### Typical End-to-End Flow
-
+```
 [Frontend UI]
     ↓
 [Backend API (FastAPI)]
@@ -80,4 +80,4 @@ Llama LLM Running on vllm for optimized inferencing.
     │       ↳ Response: interest rate prediction
     └─> Llama 8B Chatbot (OpenShift AI)
             ↳ Context-aware loan advice
-
+```
