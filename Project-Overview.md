@@ -32,11 +32,11 @@ Model: AutoML Classification trained on BigQuery data.
 Endpoint: Deployed Vertex model serving predict requests via REST API.
 
 #### OpenShift AI (on OpenShift Cluster)
-##### Predictive Model
+**Predictive Model**
 
 Interest-rate regression model served through KServe (ONNX).
 
-##### Large Language Model
+**Large Language Model**
 
 OpenShift Cluster has one GPU node running 2xA100 from Google Cloud
 Llama 3.1-8B-Instruct model is running on Red Hat AI Inference Server and leveraging vllm
