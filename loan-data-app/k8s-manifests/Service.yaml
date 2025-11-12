@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: loan-publisher
+  namespace: loan-app
+spec:
+  selector:
+    app: loan-publisher
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
