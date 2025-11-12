@@ -19,8 +19,7 @@ podman push us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1
 * Test the app locally and publish messages to pub/sub   
 * Create GCP service account secret 
 * Deploy the app on OCP and verify messages are being pushed to pub/sub topic
-``` oc apply -f loan-data-app/k8s-manifests/.
-```
+``` oc apply -f loan-data-app/k8s-manifests/. ```
 * [Create Dataset and table Schema in BigQuery](gcloud-manifests/bq_schema.json)
 * [Create A Subscription to write from Pub Sub to bigquery](gcloud-manifests/pubsub_subscriptions.json)
 * [Verify table in BigQuery](gcloud-manifests/bq_table.txt)
