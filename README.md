@@ -11,8 +11,8 @@ This project demonstrates an end-to-end hybrid AI architecture combining Google 
 * Login to Google Cloud via CLI
 ``` gcloud auth login ``` 
 * Build the [App](loan-data-app) publishing historical loan data and push to artifactory
-  ``` podman build --platform linux/amd64 -t us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1 .
-      podman push us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1 ```
+``` podman build --platform linux/amd64 -t us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1 .
+    podman push us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-app:v1 ```
 * [Create a pub/sub topic in GCP](gcloud-manifests/pubsub_topics.json)
 * Test the app locally and publish messages to pub/sub   
 * Create GCP service account secret 
