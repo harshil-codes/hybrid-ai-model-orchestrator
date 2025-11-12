@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import Chatbot from "./Chatbot";
 
 const App = () => {
   const [form, setForm] = useState({
@@ -65,6 +66,11 @@ const handleSubmit = async (e) => {
           {loading ? "Predicting..." : "Submit"}
         </button>
       </form>
+
+<div style={{ marginTop: "40px" }}>
+  <h2>💬 Talk to Our Loan Assistant</h2>
+  <Chatbot />
+</div>
 
       {result && (
         <div style={{ marginTop: "20px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
