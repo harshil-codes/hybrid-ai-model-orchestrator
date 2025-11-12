@@ -67,9 +67,10 @@ Prompt-engineered chatbot with dynamic context from previous inference results.
 
 BigQuery-based dataset creation and Vertex AI AutoML training pipeline.
 
-No Spark/Kafka components — ingestion simplified via direct Pub/Sub → BigQuery → Vertex.
+Llama LLM Running on vllm for optimized inferencing.
 
 ### Typical End-to-End Flow
+
 [Frontend UI]
     ↓
 [Backend API (FastAPI)]
