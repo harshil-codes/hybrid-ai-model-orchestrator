@@ -1,11 +1,14 @@
-## Hybrid AI Model Orchestration
+# Hybrid AI Model Orchestration
 
 This project demonstrates an end-to-end hybrid AI architecture combining Google Vertex AI and OpenShift AI to automate loan decisioning. The frontend collects applicant data and sends it to a backend (FastAPI on OpenShift), which first queries a Vertex AI model for loan approval prediction and confidence scoring. If approved, it then calls an OpenShift AI ONNX model to determine the personalized interest rate. The system integrates seamlessly with a conversational Llama-based chatbot running on Red Hat AI Inference Server to provide applicants personalized financial guidance and loan insights. 
 
-## Steps to Recreate the environment
+## Create OpenShift cluster on Google Cloud
 
 * Request GCP Blank Environment on RHDP
 * [Follow the steps here to install a Cluster on GCP](https://docs.redhat.com/en/documentation/openshift_container_platform/4.10/html/installing/installing-on-gcp)
+
+## Google Cloud Data Pipeline, Model Training and Inferencing
+
 * Enable Google Cloud API's for artifactory, pub/sub, bigquery
 ```
 gcloud services enable \
@@ -123,13 +126,17 @@ gcloud ai endpoints deploy-model ENDPOINT_ID \
 ```
 * Modify the query script [here](gcloud-manifests/query.sh) and run the script
 
-OpenShift
+## OpenShift AI Model Training and Inference
 
-* Install OCP AI from Operatorhub, create Data Science Cluster  
 * Install OCP Service mesh operator  
-* Install OCP Serverless Operator  
-* Create Workbench, train the model  
-* Deploy the model and Serve using OpenShift AI  
+* Install OCP Serverless Operator
+* Install OCP AI from Operatorhub, create Data Science Cluster 
+* Create Workbench, train the model
+* Deploy the model and Serve using OpenShift AI
+
+## Deploying GPU Enabled Nodes and LLM on AI Inference Server
+
+## Deploying the Business Application  
 * Deploy the backend app to consume both the models  
 * Deploy frontend app to connect to the backend
 
