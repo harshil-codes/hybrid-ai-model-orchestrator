@@ -39,63 +39,71 @@ LLAMA_URL = os.getenv(
     "https://redhataillama-31-8b-instruct-loan-rate-model.apps.asa-demo.7mhsq.gcp.redhatworkshops.io/v1/completions"
 )
 
-# --- Chat Endpoint ---
+
 @app.post("/chat")
 async def chat(request: Request):
-    """Handles chatbot interactions via OpenShift AI Llama model"""
+    """Handles chatbot interactions via OpenShift AI Llama model with context awareness."""
     data = await request.json()
     user_message = data.get("message", "")
 
-    # Prompt engineering for context
-    system_prompt = (
-        "You are an intelligent financial assistant specializing in loan guidance. "
-        "If the loan is approved, explain how the user can lower their interest rate "
-        "(e.g., improving credit score, shorter tenors, or reducing debt ratio). "
-        "If the loan is rejected, give actionable advice for approval next time "
-        "(e.g., improving income, reducing requested loan amount, or repaying debts). "
-        "Be concise, empathetic, and use simple terms."
-    )
+    last_decision = getattr(app.state, "last_loan_decision", None)
 
-    # Create the model input
+    # Build contextual section
+    if last_decision:
+        context_summary = (
+            f"Loan Approved: {'Yes' if last_decision['loan_approved'] else 'No'}\n"
+            f"Confidence: {last_decision['approval_confidence']:.2f}\n"
+            f"Predicted Interest Rate: {last_decision.get('predicted_interest_rate', 'N/A')}\n"
+            f"Credit Score: {last_decision['avg_credit_score']}\n"
+            f"Annual Income: {last_decision['avg_annual_income']}\n"
+            f"Requested Amount: {last_decision['avg_requested_amount']}\n"
+        )
+    else:
+        context_summary = "No loan decision context available yet."
+
+    # ✳️ Structured system prompt for better grounding
+    prompt = f"""
+You are a smart and empathetic financial assistant helping users understand their loan results.
+
+Context from the latest loan prediction:
+{context_summary}
+
+User asked: "{user_message}"
+
+Respond based on the above context.
+If the loan was denied, explain why and give 2–3 clear improvement tips.
+If approved, explain what helped and how to reduce the interest rate further.
+Be concise, friendly, and encouraging.
+"""
+
     payload = {
-        "prompt": f"{system_prompt}\n\nUser: {user_message}\nAssistant:",
-        "max_tokens": 200,
-        "temperature": 0.4
+        "prompt": prompt,
+        "max_tokens": 250,
+        "temperature": 0.5,
     }
 
     try:
         response = requests.post(LLAMA_URL, json=payload, verify=False)
         response.raise_for_status()
-        result = response.json()
-        model_reply = result.get("choices", [{}])[0].get("text", "").strip()
-        return {"response": model_reply}
+        data = response.json()
+        reply = data.get("choices", [{}])[0].get("text", "No reply from model").strip()
+        return {"response": reply}
 
     except Exception as e:
-        return {"error": f"Chat service error: {str(e)}"}
-
+        raise HTTPException(status_code=500, detail=f"Chat service error: {str(e)}")
 
 
 @app.post("/predict")
 def predict(payload: dict):
-    """
-    Step 1: Validate input and compute derived features
-    Step 2: Query Vertex AI model for loan approval
-    Step 3: If approved (confidence ≥ threshold), query OpenShift AI model for interest rate
-    """
-
-    # --- Step 1️⃣ Validate and preprocess input ---
+    # Step 1️⃣ Preprocess input
     avg_credit_score = float(payload.get("avg_credit_score", 650))
     avg_annual_income = float(payload.get("avg_annual_income", 100000))
     avg_requested_amount = float(payload.get("avg_requested_amount", 50000))
-
-    # Derived ratio
     loan_to_income_ratio = avg_requested_amount / max(avg_annual_income, 1)
 
-    # Placeholder defaults (used by interest rate model)
     avg_requested_tenor_months = float(payload.get("avg_requested_tenor_months", 60))
     total_past_due = float(payload.get("total_past_due", 0.05))
 
-    # Build payload for Vertex AI
     vertex_input = {
         "instances": [
             {
@@ -107,7 +115,7 @@ def predict(payload: dict):
         ]
     }
 
-    # --- Step 2️⃣ Query Vertex AI Model (loan approval) ---
+    # Step 2️⃣ Vertex AI call
     creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
     auth_req = grequests.Request()
     creds.refresh(auth_req)
@@ -131,48 +139,49 @@ def predict(payload: dict):
     predictions = vertex_result.get("predictions", [])[0]
     classes = predictions.get("classes", [])
     scores = predictions.get("scores", [])
-
-    # Find confidence for class "1" (approved)
     approval_idx = classes.index("1") if "1" in classes else 0
     approval_score = scores[approval_idx]
 
-    # --- Step 3️⃣ Approval Decision ---
-    if approval_score < CONFIDENCE_THRESHOLD:
-        return {
-            "loan_approved": False,
-            "approval_confidence": approval_score,
-            "reason": f"Confidence below threshold ({CONFIDENCE_THRESHOLD})",
-            "vertex_response": vertex_result,
+    # Step 3️⃣ Decision Logic
+    loan_approved = approval_score >= CONFIDENCE_THRESHOLD
+    interest_rate = None
+    oai_result = {}
+
+    if loan_approved:
+        openshift_payload = {
+            "inputs": [
+                {
+                    "name": "input:0",
+                    "shape": [1, 5],
+                    "datatype": "FP32",
+                    "data": [
+                        avg_credit_score,
+                        avg_annual_income,
+                        avg_requested_amount,
+                        avg_requested_tenor_months,
+                        total_past_due,
+                    ],
+                }
+            ]
         }
 
-    # --- Step 4️⃣ Query OpenShift AI Model (interest rate) ---
-    openshift_payload = {
-        "inputs": [
-            {
-                "name": "input:0",
-                "shape": [1, 5],
-                "datatype": "FP32",
-                "data": [
-                    avg_credit_score,
-                    avg_annual_income,
-                    avg_requested_amount,
-                    avg_requested_tenor_months,
-                    total_past_due,
-                ],
-            }
-        ]
+        oai_response = requests.post(OPENSHIFT_MODEL_URL, json=openshift_payload, verify=False)
+        if oai_response.status_code == 200:
+            oai_result = oai_response.json()
+            interest_rate = oai_result.get("outputs", [{}])[0].get("data", [None])[0]
+
+    # 🔹 Always store last decision for chatbot context
+    app.state.last_loan_decision = {
+        "loan_approved": loan_approved,
+        "approval_confidence": approval_score,
+        "predicted_interest_rate": interest_rate,
+        "avg_credit_score": avg_credit_score,
+        "avg_annual_income": avg_annual_income,
+        "avg_requested_amount": avg_requested_amount,
     }
 
-    oai_response = requests.post(OPENSHIFT_MODEL_URL, json=openshift_payload, verify=False)
-    if oai_response.status_code != 200:
-        raise HTTPException(status_code=500, detail=f"OpenShift AI error: {oai_response.text}")
-
-    oai_result = oai_response.json()
-    interest_rate = oai_result.get("outputs", [{}])[0].get("data", [None])[0]
-
-    # --- Step 5️⃣ Final Response ---
     return {
-        "loan_approved": True,
+        "loan_approved": loan_approved,
         "approval_confidence": approval_score,
         "predicted_interest_rate": interest_rate,
         "vertex_model_output": vertex_result,
