@@ -1,14 +1,21 @@
-apiVersion: route.openshift.io/v1
 kind: Route
+apiVersion: route.openshift.io/v1
 metadata:
-  name: loan-frontend-route
+  name: frontend
   namespace: loan-app
+  annotations:
+    openshift.io/host.generated: 'true'
 spec:
+  host: frontend-loan-app.apps.asa-demo.7mhsq.gcp.redhatworkshops.io
+  path: /
   to:
     kind: Service
     name: loan-frontend
+    weight: 100
   port:
-    targetPort: 80
+    targetPort: 8080-tcp
   tls:
     termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
 

@@ -1,5 +1,5 @@
-apiVersion: apps/v1
 kind: Deployment
+apiVersion: apps/v1
 metadata:
   name: loan-backend
   namespace: loan-app
@@ -15,40 +15,47 @@ spec:
       labels:
         app: loan-backend
     spec:
-      containers:
-        - name: loan-backend
-          image: us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-backend-chatbot:v3
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          env:
-            # Vertex AI configuration
-            - name: VERTEX_PROJECT_ID
-              value: "openenv-7mhsq"
-            - name: VERTEX_REGION
-              value: "us-central1"
-            - name: VERTEX_ENDPOINT_ID
-              value: "5259631519210668032"
-
-            # OpenShift AI model endpoint
-            - name: OPENSHIFT_MODEL_URL
-              value: "https://interest-rate-loan-rate-model.apps.asa-demo.7mhsq.gcp.redhatworkshops.io/v2/models/interest-rate/infer"
-
-            # Confidence threshold for Vertex AI decision
-            - name: CONFIDENCE_THRESHOLD
-              value: "0.75"
-
-            # GCP credential configuration
-            - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: "/var/secrets/google/key.json"
-
-          volumeMounts:
-            - name: gcp-sa-key
-              mountPath: /var/secrets/google
-              readOnly: true
-
       volumes:
         - name: gcp-sa-key
           secret:
             secretName: gcp-sa-key
-
+            defaultMode: 420
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: loan-backend
+          env:
+            - name: VERTEX_PROJECT_ID
+              value: openenv-7mhsq
+            - name: VERTEX_REGION
+              value: us-central1
+            - name: VERTEX_ENDPOINT_ID
+              value: '6738061242197344256'
+            - name: OPENSHIFT_MODEL_URL
+              value: 'https://interest-rate-loan-rate-model.apps.asa-demo.7mhsq.gcp.redhatworkshops.io/v2/models/interest-rate/infer'
+            - name: CONFIDENCE_THRESHOLD
+              value: '0.75'
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/secrets/google/key.json
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: gcp-sa-key
+              readOnly: true
+              mountPath: /var/secrets/google
+          terminationMessagePolicy: File
+          image: 'us-docker.pkg.dev/openenv-7mhsq/asa-demo/loan-backend-chatbot:v5'
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
