@@ -1,4 +1,4 @@
-# **Hybrid AI Model Orchestration — Financial Services (Loan Approval) — Demo Plan**
+# **Hybrid AI Model Orchestration — Financial Services (Loan Approval) **
 
 ## **Summary**
 
@@ -13,11 +13,11 @@
 
   * **GCP / Vertex AI** — trains a **Loan Approval** classifier (approve / manual-review / reject) using historical loan & repayment data in BigQuery.
 
-  * **OpenShift AI** — trains a **Loan Terms** regression model to predict suggested loan amount and interest rate, using the same dataset ingested locally (Spark on OpenShift).
+  * **OpenShift AI** — trains a **Loan Term** regression model to predict suggested loan amount and interest rate.
 
 * **Central API Gateway (on OpenShift)** — unified `/api/v1/loan-decision` endpoint that routes calls to the correct model(s) and composes the final decision returned to the business application.
 
-* Business application publishes loan application and repayment events **to both**: Pub/Sub → BigQuery (GCP) and Kafka/Strimzi → Spark (OpenShift) (Option A).
+* Business application publishes loan application and repayment events **to **: Pub/Sub → BigQuery (GCP) 
 
 ---
 
