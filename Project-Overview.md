@@ -1,4 +1,4 @@
-# **Hybrid AI Model Orchestration — Financial Services (Loan Approval) **
+# Hybrid AI Model Orchestration — Financial Services (Loan Approval)
 
 ## **Summary**
 
@@ -7,198 +7,85 @@
 ### Arcitecture Diagram
 ![Architecture Diagram](images/ai-model-orchestration-arch.png)
 
-### **1\) High-level summary**
+### System Components
+🏦 Business Frontend
 
-* Two model environments:
+React + Vite web UI.
 
-  * **GCP / Vertex AI** — trains a **Loan Approval** classifier (approve / manual-review / reject) using historical loan & repayment data in BigQuery.
+Accepts loan input fields: credit_score, annual_income, requested_amount, requested_tenor_months.
 
-  * **OpenShift AI** — trains a **Loan Term** regression model to predict suggested loan amount and interest rate.
+Displays model inference results (approval, confidence, interest rate).
 
-* **Central API Gateway (on OpenShift)** — unified `/api/v1/loan-decision` endpoint that routes calls to the correct model(s) and composes the final decision returned to the business application.
+Integrates a chatbot panel (bottom-right) that talks to the backend /chat endpoint.
 
-* Business application publishes loan application and repayment events **to **: Pub/Sub → BigQuery (GCP) 
+⚙️ Backend (API Gateway / Inference Router)
 
----
+Implemented in FastAPI, deployed on OpenShift.
 
-### **2\) Top-level components**
+Routes requests as follows:
 
-1. **Business Application (Producer)**
+Calls Vertex AI endpoint (loan approval model).
 
-   * Microservice publishing JSON events (application, repayment, account updates) to Pub/Sub and Kafka.
+If approved → calls OpenShift AI model (interest rate model).
 
-2. **GCP Ingestion & Storage**
+Stores context for chatbot awareness.
 
-   * Pub/Sub → (optional Dataflow) → BigQuery (raw & feature tables).
+Also serves /chat, which forwards prompts to the Llama model along with recent decision context.
 
-3. **OpenShift Ingestion & Storage**
+☁️ Vertex AI (Google Cloud)
 
-   * Kafka (Strimzi) → Spark Structured Streaming on OpenShift → local feature store (Postgres/MinIO).
+Dataset: loan_training_data_v5 in BigQuery.
+Features: avg_credit_score, avg_annual_income, avg_requested_amount, avg_requested_tenor_months, loan_to_income_ratio.
+Target: loan_approval_status.
 
-4. **Model Training**
+Model: AutoML Classification trained on BigQuery data.
 
-   * **Vertex AI**: training pipeline (AutoML or custom), model registry, deployment to Vertex endpoint.
+Endpoint: Deployed Vertex model serving predict requests via REST API.
 
-   * **OpenShift AI**: Spark training job or containerized trainer, MLflow model registry (or local artifact store), model served via KServe/Knative.
+🔺 OpenShift AI (on OpenShift Cluster)
 
-5. **Model Registry & Metadata**
+Interest-rate regression model served through KServe (ONNX).
 
-   * MLflow for OpenShift; Vertex Model Registry for GCP. Optional metadata sync for unified view.
+Llama 8B Instruct model exposed through /v1/completions API for chatbot.
 
-6. **API Gateway / Router (on OpenShift)**
+Both models run in the Data Science Cluster environment.
 
-   * Stateless service that accepts inference requests, queries registry/metrics, applies routing policy, forwards to Vertex or OpenShift endpoints, aggregates responses.
+### Data & Flow
 
-7. **Orchestration & CI/CD**
+User submits loan request via frontend.
 
-   * Terraform \+ Helm / OpenShift templates, ArgoCD or Tekton for continuous deployment.
+Backend calls Vertex AI to classify approval.
 
-8. **Observability**
+If approved → backend queries OpenShift AI ONNX model for predicted interest rate.
 
-   * Prometheus \+ Grafana (OpenShift), Cloud Monitoring (GCP), OpenTelemetry traces, ELK/Cloud Logging for logs.
+Backend returns combined result to frontend.
 
-9. **Security & Governance**
+Chatbot can interpret the last prediction context (approval status, confidence, interest rate, income, etc.) and give guidance such as:
 
-   * Workload Identity / service accounts, mTLS, OAuth2/JWT for API, logging & auditing, data residency policies.
+“Your loan was approved at 11% interest — improve your score to 700 to lower it.”
 
----
+“Your loan was denied — try reducing requested amount or improving income.”
 
-### **3\) Data model & messages**
+### Technical Highlights
 
-Use a single canonical JSON schema for all events (application \+ repayment \+ updates) so both clouds can consume the same payload.
+Cross-cloud orchestration: OpenShift AI + Vertex AI via secure service account (GCP key secret mounted in pod).
 
-Key fields (examples):
+Containerized deployment: Frontend + Backend built and deployed on OpenShift using BuildConfigs and Routes.
 
-* `event_id`, `event_type` (`application|repayment|account_update`)
+Prompt-engineered chatbot with dynamic context from previous inference results.
 
-* `timestamp`, `entity_type`, `entity_id`, `loan_id`
+BigQuery-based dataset creation and Vertex AI AutoML training pipeline.
 
-* `requested_amount`, `requested_tenor_months`
+No Spark/Kafka components — ingestion simplified via direct Pub/Sub → BigQuery → Vertex.
 
-* `payment_due`, `payment_amount`, `outstanding_balance`, `num_past_due`
-
-* `credit_score`, `annual_income`, `employment_status`, `region`
-
-* `metadata` (freeform)
-
-Publish same messages to:
-
-* Pub/Sub topic `loan-events` (GCP)
-
-* Kafka topic `loan-events` (OpenShift)
-
----
-
-### **4\) End-to-end data flows**
-
-#### **A — Ingest (GCP)**
-
-1. Business app → Pub/Sub `loan-events`.
-
-2. (Optional) Dataflow or Cloud Function subscribes → cleans/enriches → writes raw events to BigQuery.
-
-3. Scheduled Vertex training pipeline reads BigQuery feature tables → trains classifier → registers model → deploys to Vertex endpoint.
-
-#### **B — Ingest (OpenShift)**
-
-1. Business app → Kafka `loan-events` (Strimzi).
-
-2. Spark Structured Streaming consumes Kafka → performs feature engineering → writes features to Postgres/MinIO (feature store).
-
-3. On-schedule or triggered training job consumes feature tables → trains regression model → registers in MLflow → deploys to KServe endpoint.
-
-#### **C — Inference / Orchestration**
-
-1. Business app calls `POST /api/v1/loan-decision` on API Gateway (OpenShift) with application payload.
-
-2. Gateway:
-
-   * Calls Vertex AI classifier endpoint → gets `approval_decision` \+ confidence.
-
-   * If `approved` (or conditional), Gateway calls OpenShift AI regression endpoint → gets `suggested_amount`, `suggested_interest_rate`.
-
-   * Gateway composes final response and returns to the business app.
-
-   * All calls logged for audit; metrics emitted.
-
----
-
-### **5\) Routing logic (policy examples)**
-
-Routing decisions should be configurable (feature flags / policy store). Example decision tree:
-
-1. If `use_case == loan_approval` → route to **Vertex AI**.
-
-2. If `approval == approved` → route to **OpenShift AI** for terms calculation.
-
-3. If `approval == manual_review` → respond with `manual_review_required` and optionally route partial data to OpenShift for pre-scoring.
-
-4. If Vertex endpoint unavailable → fallback to OpenShift backup (smaller classifier) or return `service_unavailable`.
-
-5. Dynamic metrics adjustments:
-
-   * If OpenShift latency \> threshold, prefer Vertex for regression (if allowed).
-
-   * If `region` requires data residency, force routing to OpenShift.
-
-Pseudo-weighted scoring (example):
-
-```
-score = availability*0.4 + latency_score*0.2 + cost_score*0.1 + accuracy*0.3
-choose highest score
-```
-
----
-
-### **6\) API design (example)**
-
-`POST /api/v1/loan-decision`  
- Request:
-
-```json
-{
-  "use_case": "loan_application",
-  "payload": { ... canonical event fields ... },
-  "requirements": {"max_latency_ms": 300, "data_residency": "on_prem"}
-}
-```
-
-Response:
-
-```json
-{
-  "loan_id": "LN-123",
-  "approval_status": "approved",
-  "approval_confidence": 0.91,
-  "suggested_loan_amount": 45000.0,
-  "suggested_interest_rate": 6.25,
-  "model_metadata": {
-    "approval_model": {"id":"gcp-approval-v2", "location":"vertex"},
-    "terms_model": {"id":"ocp-terms-v1", "location":"openshift"}
-  }
-}
-```
-
----
-
-### **7\) Model specifics & data needs**
-
-#### **Vertex AI — Loan Approval (classifier)**
-
-* Input: applicant profile, credit history, repayment history, requested loan details, engineered features (DTI, past delinquency count).
-
-* Label: historical approval label / outcome.
-
-* Training: BigQuery as source, Vertex Pipelines / AutoML or custom training.
-
-### **OpenShift AI — Loan Terms (regression)**
-
-* Input: applicant risk metrics (credit score, recent delinquencies), loan parameters, engineered features (recent payment consistency), optional portfolio-level signals.
-
-* Targets: interest rate (%), approved amount ($).
-
-* Training: Spark on OpenShift reads local feature store created from Kafka stream.
-
-Both models trained from the same canonical dataset but with different feature selections and preprocessing pipelines.
-
+### Typical End-to-End Flow
+[Frontend UI]
+    ↓
+[Backend API (FastAPI)]
+    ├─> Vertex AI Model (Loan Approval)
+    │       ↳ Response: approved + confidence
+    ├─> OpenShift AI Model (Interest Rate)
+    │       ↳ Response: interest rate prediction
+    └─> Llama 8B Chatbot (OpenShift AI)
+            ↳ Context-aware loan advice
 
