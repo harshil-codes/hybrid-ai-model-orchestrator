@@ -99,6 +99,12 @@ gcloud pubsub subscriptions create $SUBSCRIPTION_ID \
 bq query --use_legacy_sql=false --file=gcloud-manifests/bq_training_data_table.sql)
 ```
 * [Verify the new table in BigQuery](gcloud-manifests/bq_table_trained.txt)
+* Publish the BigQuery Table to Cloud Bucket
+```
+bq extract --destination_format=CSV \
+    ${PROJECT_ID}:${BQ_DATASET}.${BQ_TABLE} \
+    gs://${MY_BUCKET}/data.csv
+```
 * Create a Tablular type dataset in Vertex AI, Configure the dataset location as the bq table created above
 ```
 # Create dataset
