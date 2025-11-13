@@ -150,7 +150,7 @@ python3 openshift-ai-manifests/infer.py
 ```
 
 ## Deploying GPU Enabled Nodes and LLM on AI Inference Server
-* We're Choosing 2xA100 GPU node in GCP, Add in a new machineset with this instance type. [Sample machineset](openshift-ai-manifests/machineset.yaml)
+* We're Choosing 1 Nvidia A100 GPU node in GCP, Add in a new machineset with this instance type. [Sample machineset](openshift-ai-manifests/machineset.yaml)
 * Install OpenShift Node Feature Discover Operator
 * Create NodeFeatureDiscovery CR
 * Install NVIDI GPU Operator
